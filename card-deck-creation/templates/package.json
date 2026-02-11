@@ -1,0 +1,14 @@
+{
+  "name": "my-card-deck",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Custom card deck with AI artwork",
+  "scripts": {
+    "generate": "node src/generate-images.js",
+    "render": "node src/render-cards.js",
+    "render:print": "node src/render-print-cards.js"
+  },
+  "dependencies": {
+    "puppeteer": "^24.0.0"
+  }
+}

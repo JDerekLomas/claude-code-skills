@@ -1,0 +1,45 @@
+{
+  "meta": {
+    "name": "My Card Deck",
+    "description": "Description of the deck",
+    "version": "1.0",
+    "card_count": 20
+  },
+  "category_one": [
+    {
+      "id": "cat1-01",
+      "name": "First Card",
+      "subtitle": "Optional Subtitle",
+      "description": "Main description text that appears on the card.",
+      "quote": "An inspiring quote related to the card",
+      "quote_source": "Quote Author"
+    },
+    {
+      "id": "cat1-02",
+      "name": "Second Card",
+      "description": "Description for this card."
+    }
+  ],
+  "category_two": [
+    {
+      "id": "cat2-01",
+      "name": "Another Card",
+      "description": "Card description here.",
+      "extra_field": "Categories can have custom fields",
+      "list_field": ["Item 1", "Item 2", "Item 3"]
+    }
+  ],
+  "category_three": [
+    {
+      "id": "cat3-01",
+      "name": "Action Card",
+      "description": "What this card represents.",
+      "instructions": [
+        "Step one to follow",
+        "Step two to follow",
+        "Step three to follow"
+      ],
+      "tip": "A helpful tip for using this card"
+    }
+  ]
+}
