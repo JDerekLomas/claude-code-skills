@@ -18,13 +18,18 @@ log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOG"; }
 RECENT=$(find "$DRAFTS_DIR" -name '*.txt' -mtime -0.5 2>/dev/null | head -1)
 [ -n "$RECENT" ] && { log "skip: recent draft exists ($RECENT)"; exit 0; }
 
-# Build context: recent git activity across known repos
+# Build context: recent git activity across known repos.
+# Look back 7 days — drafts about week-old work are still interesting,
+# and 24h often misses the meaty stuff.
 CONTEXT_FILE=$(mktemp)
 trap 'rm -f "$CONTEXT_FILE" "$PROMPT_FILE"' EXIT
 
 for d in "${HOME}/sourcelibrary" "${HOME}/codevibing-app" "${HOME}/projects"/*; do
     [ -d "$d/.git" ] || continue
-    recent=$(git -C "$d" log --since='1 day ago' --pretty=format:'%h %s' 2>/dev/null | head -8)
+    # Skip "Fix ", "Chore", "Bump", "Merge", "Revert" — drafter focuses on feature work
+    recent=$(git -C "$d" log --since='7 days ago' --pretty=format:'%ar | %s' 2>/dev/null \
+        | grep -v -iE '^[^|]+\| *(Fix |Chore|Bump|Merge|Revert|deps:|chore:)' \
+        | head -40)
     [ -z "$recent" ] && continue
     {
         echo "── $(basename "$d") ──"
@@ -34,7 +39,7 @@ for d in "${HOME}/sourcelibrary" "${HOME}/codevibing-app" "${HOME}/projects"/*; 
 done
 
 if [ ! -s "$CONTEXT_FILE" ]; then
-    log "no git activity in last 24h"
+    log "no notable git activity in last 7 days"
     exit 0
 fi
 
@@ -54,13 +59,18 @@ PROMPT_FILE=$(mktemp)
     echo "# Voice (talk like this)"
     cat "$VOICE_FILE"
     echo
-    echo "# Recent git activity (last 24h)"
+    echo "# Recent feature work (last 7 days, with Fix/Chore/Bump filtered out)"
     cat "$CONTEXT_FILE"
     echo
     echo "# Task"
-    echo "Pick 1-3 of the commits/themes above that would make a genuinely interesting"
-    echo "post — something concrete that someone building with Claude Code might find"
-    echo "useful. Skip vague commits. Skip anything that names a client or leaks internals."
+    echo "Look through the commits above for the most INTERESTING threads — substantial"
+    echo "features, novel technical work, things that would surprise or delight a fellow"
+    echo "developer. Prefer specific over generic; computer vision over CRUD; cross-"
+    echo "system integration over UI polish."
+    echo
+    echo "Pick 2-3 of the most interesting threads (grouping related commits is fine)"
+    echo "and draft a post about each. Skip commits about minor catalogue/listing tweaks,"
+    echo "anything that just unifies two views, or anything that feels like \"polish\"."
     echo
     echo "For each draft:"
     echo "- One paragraph, around 280 characters"
