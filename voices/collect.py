@@ -15,8 +15,9 @@ config.json:
   "hn_contexts": ["school", "hospital"],                # appended to each term for HN search ([] to skip)
   "min_len": 60,                                        # drop very short comments
   "first_person": true,                                 # keep only comments with I/me/my/we
-  "per_query": 100,                                     # Reddit results per (sub, term)
-  "pause": 4                                            # seconds between Reddit requests
+  "per_query": 10,                                      # Reddit page size; the archive times out above ~10
+  "pause": 4,                                           # seconds between Reddit requests
+  "pages": 10                                           # pages of per_query (~10) walked back in time per (sub, term)
 }
 """
 import argparse, json, re, sys, time, urllib.parse, urllib.request
@@ -35,7 +36,7 @@ def get(url, tries=4):
             return d
         except Exception as e:  # timeouts, 429s, archive "slow down" errors
             print(f"  retry {i+1} after error: {e}", file=sys.stderr)
-            time.sleep(8 * (i + 1))
+            time.sleep(15 * (i + 1))
     return None
 
 
@@ -54,23 +55,31 @@ def main():
         for domain, subs in cfg.get("reddit", {}).items():
             for sub in subs:
                 for term in cfg["terms"]:
-                    q = urllib.parse.urlencode({"subreddit": sub, "body": term, "limit": cfg.get("per_query", 100)})
-                    d = get(f"https://arctic-shift.photon-reddit.com/api/comments/search?{q}")
-                    got = 0
-                    for c in (d or {}).get("data") or []:
-                        body = c.get("body") or ""
-                        if c.get("id") in seen or not keep(body, cfg):
-                            continue
-                        seen.add(c.get("id"))
-                        link = (f"https://www.reddit.com{c['permalink']}" if c.get("permalink")
-                                else f"https://www.reddit.com/r/{sub}/comments/{(c.get('link_id') or '')[3:]}/_/{c.get('id')}")
-                        f.write(json.dumps({"src": "reddit", "domain": domain, "sub": sub, "term": term,
-                                            "score": c.get("score"), "created_utc": c.get("created_utc"),
-                                            "link": link, "body": body[:1500]}) + "\n")
-                        n += 1; got += 1
-                    f.flush()
+                    # The archive times out (HTTP 422, "Timeout. Maybe slow down a bit") on large result sets,
+                    # so ask for small pages (per_query ~20) and walk back in time with before=<oldest seen>.
+                    before, got = None, 0
+                    for page in range(cfg.get("pages", 5)):
+                        params = {"subreddit": sub, "body": term, "limit": cfg.get("per_query", 10)}
+                        if before: params["before"] = before
+                        d = get(f"https://arctic-shift.photon-reddit.com/api/comments/search?{urllib.parse.urlencode(params)}")
+                        rows = (d or {}).get("data") or []
+                        for c in rows:
+                            body = c.get("body") or ""
+                            if c.get("id") in seen or not keep(body, cfg):
+                                continue
+                            seen.add(c.get("id"))
+                            link = (f"https://www.reddit.com{c['permalink']}" if c.get("permalink")
+                                    else f"https://www.reddit.com/r/{sub}/comments/{(c.get('link_id') or '')[3:]}/_/{c.get('id')}")
+                            f.write(json.dumps({"src": "reddit", "domain": domain, "sub": sub, "term": term,
+                                                "score": c.get("score"), "created_utc": c.get("created_utc"),
+                                                "link": link, "body": body[:1500]}) + "\n")
+                            n += 1; got += 1
+                        f.flush()
+                        time.sleep(cfg.get("pause", 4))
+                        if len(rows) < cfg.get("per_query", 10):
+                            break
+                        before = min(int(c.get("created_utc") or 0) for c in rows)
                     print(f"reddit r/{sub} '{term}': {got}", file=sys.stderr)
-                    time.sleep(cfg.get("pause", 4))
         for term in cfg["terms"]:
             for ctx in cfg.get("hn_contexts", []):
                 q = urllib.parse.urlencode({"query": f"{term} {ctx}", "tags": "comment", "hitsPerPage": 50})

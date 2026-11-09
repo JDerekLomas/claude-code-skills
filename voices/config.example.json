@@ -1,14 +1,61 @@
 {
-  "terms": ["dehumanizing", "dehumanized", "dehumanising", "dehumanised", "just a number", "like a robot", "like cattle", "like a criminal"],
+  "terms": [
+    "dehumanizing",
+    "dehumanized",
+    "dehumanising",
+    "dehumanised",
+    "just a number",
+    "like a robot",
+    "like cattle",
+    "like a criminal"
+  ],
   "reddit": {
-    "education": ["Teachers", "Professors", "college", "GradSchool", "highschool", "teaching", "education", "ApplyingToCollege", "UniUK", "PhD"],
-    "health": ["nursing", "Residency", "medicine", "ChronicIllness", "disability"],
-    "work": ["antiwork", "AmazonFC", "uberdrivers", "doordash_drivers", "callcentres"],
-    "welfare/state": ["socialwork", "SSDI", "immigration", "universalcredit", "Unemployment"]
+    "education": [
+      "Teachers",
+      "Professors",
+      "college",
+      "GradSchool",
+      "highschool",
+      "teaching",
+      "education",
+      "ApplyingToCollege",
+      "UniUK",
+      "PhD"
+    ],
+    "health": [
+      "nursing",
+      "Residency",
+      "medicine",
+      "ChronicIllness",
+      "disability"
+    ],
+    "work": [
+      "antiwork",
+      "AmazonFC",
+      "uberdrivers",
+      "doordash_drivers",
+      "callcentres"
+    ],
+    "welfare/state": [
+      "socialwork",
+      "SSDI",
+      "immigration",
+      "universalcredit",
+      "Unemployment"
+    ]
   },
-  "hn_contexts": ["school", "university", "students", "hospital", "welfare", "algorithm", "job"],
+  "hn_contexts": [
+    "school",
+    "university",
+    "students",
+    "hospital",
+    "welfare",
+    "algorithm",
+    "job"
+  ],
   "min_len": 60,
   "first_person": true,
-  "per_query": 100,
-  "pause": 4
+  "per_query": 10,
+  "pause": 5,
+  "pages": 2
 }
